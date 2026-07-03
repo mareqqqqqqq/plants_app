@@ -32,3 +32,6 @@ class PlantRepository:
             return result.scalars().first()
         except SQLAlchemyError as e:
             pass
+
+    async def create_user_pot(self):
+        pass
