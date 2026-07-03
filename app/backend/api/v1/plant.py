@@ -5,6 +5,8 @@ from typing import List
 from app.backend.db import get_db
 from app.backend.services.plant_service import PlantService
 from app.backend.schemas.plant import PlantResponse
+from app.backend.schemas.plant import UserPlantCreate
+
 
 router = APIRouter()
 
@@ -24,5 +26,14 @@ async def get_plants_batch(plants_ids: List[int], db: AsyncSession = Depends(get
 
 
 @router.post("/add", status_code=status.HTTP_201_CREATED)
-async def add(db: AsyncSession = Depends(get_db)):
-    pass
+async def add_user_plant(plant_data: UserPlantCreate, db: AsyncSession = Depends(get_db)):
+    plant_service = PlantService(db)
+    new_pot = await plant_service.create_new_pot(
+        plant_id=plant_data.plant_id,
+        custom_name=plant_data.custom_name,
+        notes=plant_data.notes,
+        watering_interval_days=plant_data.watering_interval_days,
+        img_url=plant_data.img_url,
+        last_watered_date=plant_data.last_watered_date
+    )
+    return {"message": "Успешно добавлено в ваш сад!", "id": new_pot.id}
