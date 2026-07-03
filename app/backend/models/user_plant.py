@@ -9,15 +9,11 @@ class UserPlant(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     plant_id = Column(Integer, ForeignKey("plants.id"), nullable=True)
-
     custom_name = Column(String(100), nullable=False)
     date_added = Column(DateTime, server_default=func.now())
     notes = Column(String(500), nullable=True)
-
     watering_interval_days = Column(Integer, nullable=False, default=7)
     last_watered_date = Column(DateTime, server_default=func.now())
-
     img_url = Column(String(255), nullable=True)
-
     owner = relationship("User", back_populates="my_plants")
     plant_info = relationship("Plant", back_populates="user_instances")

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, Text
 from sqlalchemy.orm import relationship
 from app.backend.db import Base
 
+
 class Plant(Base):
     __tablename__ = "plants"
     id = Column(Integer, primary_key=True)
