@@ -3,10 +3,12 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///./plant_db.sqlite3")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres@localhost:5432/plants_db"
+)
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-engine = create_async_engine(DATABASE_URL, connect_args=connect_args)
+engine = create_async_engine(DATABASE_URL)
 
 async_session_maker = async_sessionmaker(
     engine,
@@ -14,10 +16,8 @@ async_session_maker = async_sessionmaker(
     expire_on_commit=False,
 )
 
-
 class Base(DeclarativeBase):
     pass
-
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
