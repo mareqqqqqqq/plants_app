@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Избранное — PlantCare</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="catalog.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <button class="burger" id="burgerBtn" aria-label="Открыть меню" aria-expanded="false">☰</button>
+
+    <a href="index.html" class="logo">🌿 PlantCare</a>
+
+    <div class="auth-actions">
+      <button class="btn btn-ghost" id="loginBtn">Войти</button>
+      <button class="btn btn-primary" id="registerBtn">Регистрация</button>
+    </div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar" aria-hidden="true">
+  <div class="sidebar-header">
+    <span class="logo">🌿 PlantCare</span>
+    <button class="sidebar-close" id="sidebarClose" aria-label="Закрыть меню">✕</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="catalog.html" class="sidebar-link">📖 Справочник</a>
+    <a href="index.html#my-plants" class="sidebar-link">🪴 Мои растения</a>
+    <a href="favorites.html" class="sidebar-link active">⭐ Избранное</a>
+    <a href="index.html#reminders" class="sidebar-link">🔔 Напоминания</a>
+  </nav>
+</aside>
+
+<main class="catalog-page">
+  <div class="container">
+    <h1 class="catalog-title">Избранное</h1>
+    <p class="catalog-subtitle">Растения из справочника, которые вы отметили звёздочкой.</p>
+
+    <div class="catalog-grid" id="catalogGrid" data-mode="favorites"></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay"></div>
+<div class="plant-modal" id="plantModal" aria-hidden="true">
+  <button class="modal-close" id="modalClose" aria-label="Закрыть карточку">✕</button>
+  <div class="modal-content" id="modalContent"></div>
+</div>
+
+<div class="auth-overlay" id="authOverlay"></div>
+
+<div class="auth-modal" id="loginModal" aria-hidden="true">
+  <button class="auth-modal-close" id="loginModalClose" aria-label="Закрыть">✕</button>
+  <h2>Вход</h2>
+  <form class="auth-form" id="loginForm">
+    <label>Email
+      <input type="email" name="email" required>
+    </label>
+    <label>Пароль
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Войти</button>
+  </form>
+  <p class="auth-switch">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
+</div>
+
+<div class="auth-modal" id="registerModal" aria-hidden="true">
+  <button class="auth-modal-close" id="registerModalClose" aria-label="Закрыть">✕</button>
+  <h2>Регистрация</h2>
+  <form class="auth-form" id="registerForm">
+    <label>Имя
+      <input type="text" name="name" required>
+    </label>
+    <label>Email
+      <input type="email" name="email" required>
+    </label>
+    <label>Пароль
+      <input type="password" name="password" required minlength="6">
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+  </form>
+  <p class="auth-switch">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
+</div>
+
+<script src="plants-data.js"></script>
+<script src="catalog.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
