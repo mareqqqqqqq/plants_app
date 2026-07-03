@@ -17,19 +17,34 @@ class PlantService:
 
     async def create_new_pot(
             self,
+            user_id: int,
             plant_id: Optional[int],
             custom_name: str,
             notes: Optional[str],
             watering_interval_days: int,
+            repotting_interval_months: Optional[int],
             img_url: Optional[str],
+            is_toxic: Optional[bool],
             last_watered_date: Optional[str]
     ):
         return await self.repo.create_user_pot(
+            user_id=user_id,
             plant_id=plant_id,
             custom_name=custom_name,
             notes=notes,
             watering_interval_days=watering_interval_days,
+            repotting_interval_months=repotting_interval_months,
             img_url=img_url,
+            is_toxic=is_toxic,
             last_watered_date_str=last_watered_date
         )
+
+    async def get_user_plants(self, user_id: int):
+        return await self.repo.get_user_plants(user_id)
+
+    async def update_user_plant(self, user_id: int, pot_id: int, updates: dict):
+        return await self.repo.update_user_pot(user_id, pot_id, updates)
+
+    async def delete_user_plant(self, user_id: int, pot_id: int):
+        return await self.repo.delete_user_pot(user_id, pot_id)
 

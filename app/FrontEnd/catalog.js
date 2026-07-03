@@ -112,15 +112,18 @@ const modalClose = document.getElementById('modalClose');
 const modalCopyLink = document.getElementById('modalCopyLink');
 
 const IS_FAVORITES_PAGE = catalogGrid.dataset.mode === 'favorites';
-const API_BASE = '/api/v1';
+const PLANTS_API = '/plants';
 
 let activeCard = null;
 let currentPlantId = null;
 let modalState = 'closed';
 let pendingCleanup = null;
 
+let favoritesToRender = null;
+
 function getPlantsToRender() {
   if (!IS_FAVORITES_PAGE) return PLANTS;
+  if (favoritesToRender) return favoritesToRender;
   const favIds = getFavoriteIds();
   return PLANTS.filter((p) => favIds.includes(p.id));
 }
@@ -132,6 +135,23 @@ function renderCatalog() {
     return;
   }
   catalogGrid.innerHTML = list.map(cardTemplate).join('');
+}
+
+async function loadFavoritePlants() {
+  const favIds = getFavoriteIds();
+  if (!favIds.length) {
+    favoritesToRender = [];
+    return;
+  }
+  try {
+    const params = favIds.map((id) => `plants_ids=${id}`).join('&');
+    const res = await fetch(`${PLANTS_API}/batch?${params}`);
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data)) favoritesToRender = data;
+  } catch (err) {
+    console.warn('Не удалось загрузить избранное через /plants/batch, фильтруем локально', err);
+  }
 }
 
 function computeMaxHeight() {
@@ -207,12 +227,13 @@ function openModal(plant, card) {
 }
 
 function resetCopyButton() {
+  if (!modalCopyLink) return;
   modalCopyLink.classList.remove('copied');
   modalCopyLink.querySelector('.copy-label').textContent = 'Ссылка';
 }
 
 async function copyPlantLink() {
-  if (!currentPlantId) return;
+  if (!currentPlantId || !modalCopyLink) return;
   const url = `${location.origin}${location.pathname}#plant-${currentPlantId}`;
   try {
     await navigator.clipboard.writeText(url);
@@ -291,6 +312,7 @@ catalogGrid.addEventListener('click', (e) => {
     const nowFavorite = toggleFavorite(id);
     star.classList.toggle('active', nowFavorite);
     if (IS_FAVORITES_PAGE && !nowFavorite) {
+      if (favoritesToRender) favoritesToRender = favoritesToRender.filter((p) => p.id !== id);
       renderCatalog();
     }
     return;
@@ -304,7 +326,7 @@ catalogGrid.addEventListener('click', (e) => {
 
 modalOverlay.addEventListener('click', closeModal);
 modalClose.addEventListener('click', closeModal);
-modalCopyLink.addEventListener('click', copyPlantLink);
+if (modalCopyLink) modalCopyLink.addEventListener('click', copyPlantLink);
 
 modalContent.addEventListener('click', (e) => {
   if (!e.target.matches('.expand-toggle')) return;
@@ -316,7 +338,7 @@ modalContent.addEventListener('click', (e) => {
 
 async function loadPlants() {
   try {
-    const res = await fetch(`${API_BASE}/explorer`);
+    const res = await fetch(`${PLANTS_API}/explorer`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
     if (Array.isArray(data) && data.length) {
@@ -325,6 +347,11 @@ async function loadPlants() {
   } catch (err) {
     console.warn('Не удалось загрузить растения с сервера, используются моковые данные', err);
   }
+
+  if (IS_FAVORITES_PAGE) {
+    await loadFavoritePlants();
+  }
+
   renderCatalog();
 
   const hashMatch = location.hash.match(/^#plant-(\d+)$/);

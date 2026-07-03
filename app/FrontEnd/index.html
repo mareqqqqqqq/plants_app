@@ -17,6 +17,10 @@
     <div class="auth-actions">
       <button class="btn btn-ghost" id="loginBtn">Войти</button>
       <button class="btn btn-primary" id="registerBtn">Регистрация</button>
+      <div class="user-chip" id="userChip" hidden>
+        <span class="user-chip-name" id="userChipName"></span>
+        <button class="btn btn-ghost" id="logoutBtn">Выйти</button>
+      </div>
     </div>
   </div>
 </header>
@@ -98,6 +102,7 @@
     <label>Пароль
       <input type="password" name="password" required>
     </label>
+    <p class="auth-error" id="loginError" hidden></p>
     <button type="submit" class="btn btn-primary btn-block">Войти</button>
   </form>
   <p class="auth-switch">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
@@ -116,11 +121,13 @@
     <label>Пароль
       <input type="password" name="password" required minlength="6">
     </label>
+    <p class="auth-error" id="registerError" hidden></p>
     <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
   </form>
   <p class="auth-switch">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
 </div>
 
+<script src="auth.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

@@ -19,6 +19,10 @@
     <div class="auth-actions">
       <button class="btn btn-ghost" id="loginBtn">Войти</button>
       <button class="btn btn-primary" id="registerBtn">Регистрация</button>
+      <div class="user-chip" id="userChip" hidden>
+        <span class="user-chip-name" id="userChipName"></span>
+        <button class="btn btn-ghost" id="logoutBtn">Выйти</button>
+      </div>
     </div>
   </div>
 </header>
@@ -46,6 +50,13 @@
         <p class="catalog-subtitle">Ваша личная коллекция: заметки, полив и напоминания.</p>
       </div>
       <button class="btn btn-primary" id="addPlantBtn">+ Добавить растение</button>
+    </div>
+
+    <div class="empty-state" id="authRequired" hidden>
+      <div class="empty-icon">🔐</div>
+      <h2>Нужно войти</h2>
+      <p>Личная коллекция растений привязана к аккаунту — войдите или зарегистрируйтесь, чтобы начать.</p>
+      <button class="btn btn-primary btn-lg" id="authRequiredBtn">Войти или зарегистрироваться</button>
     </div>
 
     <div class="empty-state" id="emptyState" hidden>
@@ -158,6 +169,7 @@
     <label>Пароль
       <input type="password" name="password" required>
     </label>
+    <p class="auth-error" id="loginError" hidden></p>
     <button type="submit" class="btn btn-primary btn-block">Войти</button>
   </form>
   <p class="auth-switch">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
@@ -176,11 +188,13 @@
     <label>Пароль
       <input type="password" name="password" required minlength="6">
     </label>
+    <p class="auth-error" id="registerError" hidden></p>
     <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
   </form>
   <p class="auth-switch">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
 </div>
 
+<script src="auth.js"></script>
 <script src="plants-data.js"></script>
 <script src="my-plants.js"></script>
 <script src="script.js"></script>

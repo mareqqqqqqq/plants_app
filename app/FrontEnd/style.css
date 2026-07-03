@@ -13,6 +13,8 @@
 
 * { box-sizing: border-box; }
 
+[hidden] { display: none !important; }
+
 html, body {
   height: 100%;
 }
@@ -57,9 +59,22 @@ body {
 
 .auth-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-chip-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .burger {
@@ -316,6 +331,12 @@ body {
 
 .auth-switch a:hover {
   text-decoration: underline;
+}
+
+.auth-error {
+  color: #b3261e;
+  font-size: 13px;
+  margin: 0;
 }
 
 .hero {

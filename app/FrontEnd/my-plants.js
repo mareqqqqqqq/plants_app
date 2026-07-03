@@ -1,5 +1,4 @@
-const MY_PLANTS_KEY = 'plantcare_my_plants';
-const IMAGE_MAX_SIZE = 800;
+const PLANTS_API = '/plants';
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -11,54 +10,10 @@ function safeUrl(url) {
   return String(url).replace(/["'<>()\\]/g, '');
 }
 
-function getMyPlants() {
-  try {
-    const raw = localStorage.getItem(MY_PLANTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMyPlants(list) {
-  try {
-    localStorage.setItem(MY_PLANTS_KEY, JSON.stringify(list));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function fileToDataUrl(file, maxSize) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > height && width > maxSize) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        } else if (height > maxSize) {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.82));
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 const myPlantsGrid = document.getElementById('myPlantsGrid');
 const emptyState = document.getElementById('emptyState');
+const authRequired = document.getElementById('authRequired');
+const authRequiredBtn = document.getElementById('authRequiredBtn');
 const addPlantBtn = document.getElementById('addPlantBtn');
 const emptyAddBtn = document.getElementById('emptyAddBtn');
 
@@ -91,13 +46,8 @@ const viewClose = document.getElementById('viewClose');
 const viewContent = document.getElementById('viewContent');
 
 let editingId = null;
-let pendingImage = null;
-
-PLANTS.forEach((p) => {
-  const option = document.createElement('option');
-  option.value = p.name;
-  catalogOptions.appendChild(option);
-});
+let pendingImageUrl = null;
+let myPlantsCache = [];
 
 function linkedPlantFor(rec) {
   return rec.plant_id ? PLANTS.find((p) => p.id === rec.plant_id) : null;
@@ -105,7 +55,7 @@ function linkedPlantFor(rec) {
 
 function plantImageHtml(rec, altText) {
   const linkedPlant = linkedPlantFor(rec);
-  const url = rec.image_url || (linkedPlant && linkedPlant.image_url) || null;
+  const url = rec.img_url || (linkedPlant && linkedPlant.image_url) || null;
   const emoji = (linkedPlant && linkedPlant.photo_emoji) || '🪴';
   if (url) {
     const u = safeUrl(url);
@@ -143,18 +93,39 @@ function cardHtml(rec) {
     </div>`;
 }
 
-function renderMyPlants() {
-  const list = getMyPlants();
-  if (!list.length) {
-    emptyState.hidden = false;
-    myPlantsGrid.hidden = true;
-    addPlantBtn.hidden = true;
+function setState(state) {
+  authRequired.hidden = state !== 'auth-required';
+  emptyState.hidden = state !== 'empty';
+  myPlantsGrid.hidden = state !== 'list';
+  addPlantBtn.hidden = state === 'auth-required';
+}
+
+async function fetchMyPlants() {
+  const res = await fetch(`${PLANTS_API}/my`, { headers: authHeaders() });
+  if (!res.ok) throw new Error(`status ${res.status}`);
+  return res.json();
+}
+
+async function renderMyPlants() {
+  if (!getCurrentUser()) {
+    setState('auth-required');
     return;
   }
-  emptyState.hidden = true;
-  myPlantsGrid.hidden = false;
-  addPlantBtn.hidden = false;
-  myPlantsGrid.innerHTML = list.map(cardHtml).join('');
+
+  try {
+    myPlantsCache = await fetchMyPlants();
+  } catch (err) {
+    console.warn('Не удалось загрузить растения пользователя', err);
+    myPlantsCache = [];
+  }
+
+  if (!myPlantsCache.length) {
+    myPlantsGrid.innerHTML = '';
+    setState('empty');
+    return;
+  }
+  setState('list');
+  myPlantsGrid.innerHTML = myPlantsCache.map(cardHtml).join('');
 }
 
 function setSectionEnabled(section, enabled) {
@@ -171,10 +142,10 @@ function applyMode() {
   formError.hidden = true;
 }
 
-function setPhotoPreview(dataUrl) {
-  pendingImage = dataUrl;
-  if (dataUrl) {
-    photoPreview.innerHTML = `<img src="${safeUrl(dataUrl)}" alt="Фото растения">`;
+function setPhotoPreview(url) {
+  pendingImageUrl = url;
+  if (url) {
+    photoPreview.innerHTML = `<img src="${safeUrl(url)}" alt="Фото растения">`;
     photoUpload.classList.add('has-photo');
     photoRemove.hidden = false;
   } else {
@@ -187,6 +158,15 @@ function setPhotoPreview(dataUrl) {
 function showFormError(msg) {
   formError.textContent = msg;
   formError.hidden = false;
+}
+
+async function parseApiError(res, fallback) {
+  try {
+    const data = await res.json();
+    if (typeof data.detail === 'string') return data.detail;
+    if (Array.isArray(data.detail) && data.detail[0]) return data.detail[0].msg || fallback;
+  } catch {}
+  return fallback;
 }
 
 function fillFormForEdit(rec) {
@@ -205,7 +185,7 @@ function fillFormForEdit(rec) {
     if (rec.last_watered_date) {
       lastWateredInput.value = new Date(rec.last_watered_date).toISOString().slice(0, 10);
     }
-    setPhotoPreview(rec.image_url || null);
+    setPhotoPreview(rec.img_url || null);
   }
 }
 
@@ -256,11 +236,24 @@ photoUpload.addEventListener('click', () => customImageInput.click());
 customImageInput.addEventListener('change', async () => {
   const file = customImageInput.files && customImageInput.files[0];
   if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
   try {
-    const dataUrl = await fileToDataUrl(file, IMAGE_MAX_SIZE);
-    setPhotoPreview(dataUrl);
+    const res = await fetch(`${PLANTS_API}/upload-image`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData,
+    });
+    if (!res.ok) {
+      showFormError(await parseApiError(res, 'Не удалось загрузить фото'));
+      return;
+    }
+    const data = await res.json();
+    setPhotoPreview(data.url);
   } catch {
-    showFormError('Не удалось обработать изображение');
+    showFormError('Сервер недоступен, не удалось загрузить фото');
   }
 });
 
@@ -269,12 +262,11 @@ photoRemove.addEventListener('click', () => {
   setPhotoPreview(null);
 });
 
-plantForm.addEventListener('submit', (e) => {
+plantForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   formError.hidden = true;
 
-  const nowIso = new Date().toISOString();
-  let record;
+  let payload;
 
   if (existsCheckbox.checked) {
     const plant = resolveCatalogPlant();
@@ -282,15 +274,10 @@ plantForm.addEventListener('submit', (e) => {
       showFormError('Выберите растение из справочника или вставьте корректную ссылку на карточку');
       return;
     }
-    record = {
+    payload = {
       plant_id: plant.id,
       custom_name: plant.name,
-      notes: '',
-      watering_interval_days: 7,
-      repotting_interval_months: null,
       is_toxic: plant.is_toxic,
-      last_watered_date: nowIso,
-      image_url: null
     };
   } else {
     const name = customNameInput.value.trim();
@@ -298,43 +285,36 @@ plantForm.addEventListener('submit', (e) => {
       showFormError('Укажите название растения');
       return;
     }
-    const days = Math.max(1, Math.min(365, Number(wateringDaysInput.value) || 7));
-    const months = Math.max(1, Math.min(120, Number(repottingMonthsInput.value) || 12));
-    const lastWatered = lastWateredInput.value
-      ? new Date(lastWateredInput.value + 'T12:00:00').toISOString()
-      : nowIso;
-    record = {
+    payload = {
       plant_id: null,
       custom_name: name,
-      notes: plantNotesInput.value.trim(),
-      watering_interval_days: days,
-      repotting_interval_months: months,
+      notes: plantNotesInput.value.trim() || null,
+      watering_interval_days: Math.max(1, Math.min(365, Number(wateringDaysInput.value) || 7)),
+      repotting_interval_months: Math.max(1, Math.min(120, Number(repottingMonthsInput.value) || 12)),
       is_toxic: isToxicInput.checked,
-      last_watered_date: lastWatered,
-      image_url: pendingImage || null
+      img_url: pendingImageUrl || null,
+      last_watered_date: lastWateredInput.value || null,
     };
   }
 
-  const list = getMyPlants();
-  if (editingId) {
-    const idx = list.findIndex((r) => r.id === editingId);
-    if (idx !== -1) {
-      list[idx] = Object.assign({}, list[idx], record, {
-        id: editingId,
-        date_added: list[idx].date_added
-      });
+  try {
+    const url = editingId ? `${PLANTS_API}/my/${editingId}` : `${PLANTS_API}/add`;
+    const method = editingId ? 'PATCH' : 'POST';
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      showFormError(await parseApiError(res, 'Не удалось сохранить растение'));
+      return;
     }
-  } else {
-    record.id = Date.now();
-    record.date_added = nowIso;
-    list.push(record);
-  }
-
-  if (!saveMyPlants(list)) {
-    showFormError('Не удалось сохранить — возможно, фото слишком большое. Попробуйте изображение поменьше.');
+  } catch {
+    showFormError('Сервер недоступен, попробуйте позже');
     return;
   }
-  renderMyPlants();
+
+  await renderMyPlants();
   closeForm();
 });
 
@@ -405,18 +385,32 @@ function closeView() {
   setTimeout(() => viewModal.classList.remove('open'), 250);
 }
 
-function deletePlant(recId) {
-  const rec = getMyPlants().find((r) => r.id === recId);
+async function deletePlant(recId) {
+  const rec = myPlantsCache.find((r) => r.id === recId);
   if (!rec) return;
   if (!confirm(`Удалить «${rec.custom_name}» из вашей коллекции?`)) return;
-  saveMyPlants(getMyPlants().filter((r) => r.id !== recId));
-  renderMyPlants();
+
+  try {
+    const res = await fetch(`${PLANTS_API}/my/${recId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    if (!res.ok && res.status !== 204) {
+      alert(await parseApiError(res, 'Не удалось удалить растение'));
+      return;
+    }
+  } catch {
+    alert('Сервер недоступен, попробуйте позже');
+    return;
+  }
+
+  await renderMyPlants();
 }
 
 myPlantsGrid.addEventListener('click', (e) => {
   const card = e.target.closest('.my-plant-card');
   if (!card) return;
-  const rec = getMyPlants().find((r) => r.id === Number(card.dataset.recId));
+  const rec = myPlantsCache.find((r) => r.id === Number(card.dataset.recId));
   if (rec) openView(rec);
 });
 
@@ -425,14 +419,14 @@ myPlantsGrid.addEventListener('keydown', (e) => {
   const card = e.target.closest('.my-plant-card');
   if (!card) return;
   e.preventDefault();
-  const rec = getMyPlants().find((r) => r.id === Number(card.dataset.recId));
+  const rec = myPlantsCache.find((r) => r.id === Number(card.dataset.recId));
   if (rec) openView(rec);
 });
 
 viewContent.addEventListener('click', (e) => {
   const editBtn = e.target.closest('[data-edit-id]');
   if (editBtn) {
-    const rec = getMyPlants().find((r) => r.id === Number(editBtn.dataset.editId));
+    const rec = myPlantsCache.find((r) => r.id === Number(editBtn.dataset.editId));
     closeView();
     if (rec) openForm(rec);
     return;
@@ -447,6 +441,7 @@ viewContent.addEventListener('click', (e) => {
 
 addPlantBtn.addEventListener('click', () => openForm());
 emptyAddBtn.addEventListener('click', () => openForm());
+authRequiredBtn.addEventListener('click', () => document.getElementById('loginBtn').click());
 formClose.addEventListener('click', closeForm);
 formOverlay.addEventListener('click', closeForm);
 viewClose.addEventListener('click', closeView);
@@ -458,4 +453,24 @@ document.addEventListener('keydown', (e) => {
   else if (viewModal.classList.contains('open')) closeView();
 });
 
+document.addEventListener('plantcare:authchange', renderMyPlants);
+
+async function loadCatalogForForm() {
+  try {
+    const res = await fetch(`${PLANTS_API}/explorer`);
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) PLANTS = data;
+  } catch (err) {
+    console.warn('Не удалось загрузить справочник растений, используются моковые данные', err);
+  }
+  catalogOptions.innerHTML = '';
+  PLANTS.forEach((p) => {
+    const option = document.createElement('option');
+    option.value = p.name;
+    catalogOptions.appendChild(option);
+  });
+}
+
+loadCatalogForForm();
 renderMyPlants();

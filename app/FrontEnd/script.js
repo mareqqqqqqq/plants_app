@@ -29,10 +29,17 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeSidebar();
 });
 
+const USERS_API = '/users';
+
 const authOverlay = document.getElementById('authOverlay');
 const loginModal = document.getElementById('loginModal');
 const registerModal = document.getElementById('registerModal');
 const authModals = [loginModal, registerModal];
+const loginError = document.getElementById('loginError');
+const registerError = document.getElementById('registerError');
+const userChip = document.getElementById('userChip');
+const userChipName = document.getElementById('userChipName');
+const logoutBtn = document.getElementById('logoutBtn');
 
 let authOpenState = 'closed';
 
@@ -41,6 +48,8 @@ function openAuthModal(modal) {
     m.classList.remove('open', 'visible');
     m.setAttribute('aria-hidden', 'true');
   });
+  loginError.hidden = true;
+  registerError.hidden = true;
 
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
@@ -93,14 +102,87 @@ document.getElementById('switchToLogin').addEventListener('click', (e) => {
   openAuthModal(loginModal);
 });
 
-document.getElementById('loginForm').addEventListener('submit', (e) => {
+function showAuthError(el, message) {
+  el.textContent = message;
+  el.hidden = false;
+}
+
+async function parseAuthError(res, fallback) {
+  try {
+    const data = await res.json();
+    if (typeof data.detail === 'string') return data.detail;
+    if (Array.isArray(data.detail) && data.detail[0]) return data.detail[0].msg || fallback;
+  } catch {}
+  return fallback;
+}
+
+function refreshAuthUI() {
+  const user = getCurrentUser();
+  const loggedIn = !!user;
+  document.getElementById('loginBtn').hidden = loggedIn;
+  document.getElementById('registerBtn').hidden = loggedIn;
+  userChip.hidden = !loggedIn;
+  if (loggedIn) userChipName.textContent = user.username;
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  alert('Вход появится, когда будет готов бэкенд');
-  closeAuthModal();
+  loginError.hidden = true;
+  const form = e.target;
+  const email = form.email.value.trim();
+  const password = form.password.value;
+
+  try {
+    const res = await fetch(`${USERS_API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      showAuthError(loginError, await parseAuthError(res, 'Не удалось войти'));
+      return;
+    }
+    const user = await res.json();
+    setCurrentUser(user);
+    refreshAuthUI();
+    form.reset();
+    closeAuthModal();
+  } catch {
+    showAuthError(loginError, 'Сервер недоступен, попробуйте позже');
+  }
 });
 
-document.getElementById('registerForm').addEventListener('submit', (e) => {
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  alert('Регистрация появится, когда будет готов бэкенд');
-  closeAuthModal();
+  registerError.hidden = true;
+  const form = e.target;
+  const username = form.name.value.trim();
+  const email = form.email.value.trim();
+  const password = form.password.value;
+
+  try {
+    const res = await fetch(`${USERS_API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password }),
+    });
+    if (!res.ok) {
+      showAuthError(registerError, await parseAuthError(res, 'Не удалось зарегистрироваться'));
+      return;
+    }
+    const user = await res.json();
+    setCurrentUser(user);
+    refreshAuthUI();
+    form.reset();
+    closeAuthModal();
+  } catch {
+    showAuthError(registerError, 'Сервер недоступен, попробуйте позже');
+  }
 });
+
+logoutBtn.addEventListener('click', () => {
+  clearCurrentUser();
+  refreshAuthUI();
+});
+
+refreshAuthUI();
