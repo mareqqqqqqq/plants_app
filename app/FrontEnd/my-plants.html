@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мои растения — PlantCare</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="catalog.css">
+<link rel="stylesheet" href="my-plants.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <button class="burger" id="burgerBtn" aria-label="Открыть меню" aria-expanded="false">☰</button>
+
+    <a href="index.html" class="logo">🌿 PlantCare</a>
+
+    <div class="auth-actions">
+      <button class="btn btn-ghost" id="loginBtn">Войти</button>
+      <button class="btn btn-primary" id="registerBtn">Регистрация</button>
+    </div>
+  </div>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar" aria-hidden="true">
+  <div class="sidebar-header">
+    <span class="logo">🌿 PlantCare</span>
+    <button class="sidebar-close" id="sidebarClose" aria-label="Закрыть меню">✕</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="catalog.html" class="sidebar-link">📖 Справочник</a>
+    <a href="my-plants.html" class="sidebar-link active">🪴 Мои растения</a>
+    <a href="favorites.html" class="sidebar-link">⭐ Избранное</a>
+    <a href="index.html#reminders" class="sidebar-link">🔔 Напоминания</a>
+  </nav>
+</aside>
+
+<main class="catalog-page">
+  <div class="container">
+    <div class="my-plants-header">
+      <div>
+        <h1 class="catalog-title">Мои растения</h1>
+        <p class="catalog-subtitle">Ваша личная коллекция: заметки, полив и напоминания.</p>
+      </div>
+      <button class="btn btn-primary" id="addPlantBtn">+ Добавить растение</button>
+    </div>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-icon">🪴</div>
+      <h2>Здесь пока пусто</h2>
+      <p>Добавьте первое растение — и PlantCare напомнит, когда его полить и пересадить.</p>
+      <button class="btn btn-primary btn-lg" id="emptyAddBtn">+ Добавить растение</button>
+      <div class="empty-hints">
+        <span>📖 Связь со справочником</span>
+        <span>💧 Напоминания о поливе</span>
+        <span>📝 Личные заметки</span>
+      </div>
+    </div>
+
+    <div class="catalog-grid" id="myPlantsGrid" hidden></div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="formOverlay"></div>
+<div class="plant-form-modal" id="plantFormModal" aria-hidden="true">
+  <div class="pf-header">
+    <h2 id="pfTitle">Новое растение</h2>
+    <button class="pf-close" id="plantFormClose" aria-label="Закрыть">✕</button>
+  </div>
+  <form class="pf-form" id="plantForm" novalidate>
+    <label class="pf-toggle">
+      <input type="checkbox" id="existsInCatalog">
+      <span class="pf-toggle-box"></span>
+      <span class="pf-toggle-text">
+        <span class="pf-toggle-title">Растение есть в справочнике</span>
+        <span class="pf-toggle-sub">Уход подтянется из справочника автоматически</span>
+      </span>
+    </label>
+
+    <div class="pf-section" id="linkedSection">
+      <label class="pf-field">
+        <span class="pf-label">Растение из справочника</span>
+        <input type="text" id="catalogPick" list="catalogOptions" autocomplete="off" placeholder="Введите название или вставьте ссылку" disabled>
+        <datalist id="catalogOptions"></datalist>
+      </label>
+    </div>
+
+    <div class="pf-divider"><span>детали ухода</span></div>
+
+    <div class="pf-section" id="customSection">
+      <label class="pf-field">
+        <span class="pf-label">Название растения</span>
+        <input type="text" id="customName" placeholder="Например, «Моя монстера»">
+      </label>
+
+      <div class="pf-field">
+        <span class="pf-label">Фотография</span>
+        <input type="file" id="customImage" accept="image/*" hidden>
+        <button type="button" class="pf-upload" id="photoUpload">
+          <span class="pf-upload-inner" id="photoPreview">
+            <span class="pf-upload-icon">📷</span>
+            <span class="pf-upload-text">Загрузить фото с устройства</span>
+          </span>
+        </button>
+        <button type="button" class="pf-photo-remove" id="photoRemove" hidden>Убрать фото</button>
+      </div>
+
+      <div class="pf-row">
+        <label class="pf-field">
+          <span class="pf-label">Полив, раз в … дней</span>
+          <input type="number" id="wateringDays" min="1" max="365" value="7">
+        </label>
+        <label class="pf-field">
+          <span class="pf-label">Пересадка, раз в … мес.</span>
+          <input type="number" id="repottingMonths" min="1" max="120" value="12">
+        </label>
+      </div>
+
+      <label class="pf-field">
+        <span class="pf-label">Дата последнего полива</span>
+        <input type="date" id="lastWatered">
+      </label>
+
+      <label class="pf-check">
+        <input type="checkbox" id="isToxic">
+        <span>Растение ядовито</span>
+      </label>
+
+      <label class="pf-field">
+        <span class="pf-label">Заметки</span>
+        <textarea id="plantNotes" rows="3" placeholder="Особенности ухода, где стоит, откуда появилось…"></textarea>
+      </label>
+    </div>
+
+    <p class="pf-error" id="formError" hidden></p>
+    <button type="submit" class="btn btn-primary btn-block" id="pfSubmit">Добавить растение</button>
+  </form>
+</div>
+
+<div class="modal-overlay" id="viewOverlay"></div>
+<div class="plant-view-modal" id="plantViewModal" aria-hidden="true">
+  <button class="pf-close" id="viewClose" aria-label="Закрыть">✕</button>
+  <div class="pv-content" id="viewContent"></div>
+</div>
+
+<div class="auth-overlay" id="authOverlay"></div>
+
+<div class="auth-modal" id="loginModal" aria-hidden="true">
+  <button class="auth-modal-close" id="loginModalClose" aria-label="Закрыть">✕</button>
+  <h2>Вход</h2>
+  <form class="auth-form" id="loginForm">
+    <label>Email
+      <input type="email" name="email" required>
+    </label>
+    <label>Пароль
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Войти</button>
+  </form>
+  <p class="auth-switch">Нет аккаунта? <a href="#" id="switchToRegister">Зарегистрироваться</a></p>
+</div>
+
+<div class="auth-modal" id="registerModal" aria-hidden="true">
+  <button class="auth-modal-close" id="registerModalClose" aria-label="Закрыть">✕</button>
+  <h2>Регистрация</h2>
+  <form class="auth-form" id="registerForm">
+    <label>Имя
+      <input type="text" name="name" required>
+    </label>
+    <label>Email
+      <input type="email" name="email" required>
+    </label>
+    <label>Пароль
+      <input type="password" name="password" required minlength="6">
+    </label>
+    <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
+  </form>
+  <p class="auth-switch">Уже есть аккаунт? <a href="#" id="switchToLogin">Войти</a></p>
+</div>
+
+<script src="plants-data.js"></script>
+<script src="my-plants.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

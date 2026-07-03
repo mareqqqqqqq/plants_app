@@ -1,4 +1,4 @@
-const PLANTS = [
+let PLANTS = [
   {
     id: 1,
     name: "Монстера деликатесная",

@@ -47,7 +47,8 @@ function renderTextBlock(text) {
 function imageOrEmojiHtml(plant) {
   const emoji = plant.photo_emoji || '🌿';
   if (plant.image_url) {
-    return `<img src="${plant.image_url}" alt="${escapeHtml(plant.name)}" onerror="this.replaceWith(document.createTextNode('${emoji}'))">`;
+    const url = String(plant.image_url).replace(/["'<>()\\]/g, '');
+    return `<span class="img-blur" style="background-image:url('${url}')"></span><img src="${url}" alt="${escapeHtml(plant.name)}" onerror="var b=this.previousElementSibling;if(b&&b.classList.contains('img-blur'))b.remove();this.replaceWith(document.createTextNode('${emoji}'))">`;
   }
   return emoji;
 }
@@ -66,8 +67,8 @@ function cardTemplate(plant) {
 
 function modalTemplate(plant) {
   const toxicBadge = plant.is_toxic
-    ? `<span class="toxic-badge danger">⚠️ Ядовито</span>`
-    : `<span class="toxic-badge safe">✅ Неядовито</span>`;
+    ? `<span class="toxic-badge danger">Ядовито</span>`
+    : `<span class="toxic-badge safe">Неядовито</span>`;
 
   const replantingSection = plant.replanting_info
     ? `
@@ -108,10 +109,13 @@ const modalOverlay = document.getElementById('modalOverlay');
 const modal = document.getElementById('plantModal');
 const modalContent = document.getElementById('modalContent');
 const modalClose = document.getElementById('modalClose');
+const modalCopyLink = document.getElementById('modalCopyLink');
 
 const IS_FAVORITES_PAGE = catalogGrid.dataset.mode === 'favorites';
+const API_BASE = '/api/v1';
 
 let activeCard = null;
+let currentPlantId = null;
 let modalState = 'closed';
 let pendingCleanup = null;
 
@@ -196,7 +200,33 @@ function openModal(plant, card) {
   });
 
   modal.setAttribute('aria-hidden', 'false');
+  currentPlantId = plant.id;
+  resetCopyButton();
+  history.replaceState(null, '', `#plant-${plant.id}`);
   document.addEventListener('keydown', onEscClose);
+}
+
+function resetCopyButton() {
+  modalCopyLink.classList.remove('copied');
+  modalCopyLink.querySelector('.copy-label').textContent = 'Ссылка';
+}
+
+async function copyPlantLink() {
+  if (!currentPlantId) return;
+  const url = `${location.origin}${location.pathname}#plant-${currentPlantId}`;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    const tmp = document.createElement('textarea');
+    tmp.value = url;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+  }
+  modalCopyLink.classList.add('copied');
+  modalCopyLink.querySelector('.copy-label').textContent = 'Скопировано';
+  setTimeout(resetCopyButton, 1800);
 }
 
 function closeModal() {
@@ -239,6 +269,7 @@ function closeModal() {
     modal.removeEventListener('transitionend', handler);
     if (pendingCleanup === finish) pendingCleanup = null;
     if (modalState === 'closing') modalState = 'closed';
+    history.replaceState(null, '', location.pathname + location.search);
   };
   const handler = (e) => {
     if (e.target === modal) finish();
@@ -273,6 +304,7 @@ catalogGrid.addEventListener('click', (e) => {
 
 modalOverlay.addEventListener('click', closeModal);
 modalClose.addEventListener('click', closeModal);
+modalCopyLink.addEventListener('click', copyPlantLink);
 
 modalContent.addEventListener('click', (e) => {
   if (!e.target.matches('.expand-toggle')) return;
@@ -282,4 +314,25 @@ modalContent.addEventListener('click', (e) => {
   resizeModalToContent();
 });
 
-renderCatalog();
+async function loadPlants() {
+  try {
+    const res = await fetch(`${API_BASE}/explorer`);
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      PLANTS = data;
+    }
+  } catch (err) {
+    console.warn('Не удалось загрузить растения с сервера, используются моковые данные', err);
+  }
+  renderCatalog();
+
+  const hashMatch = location.hash.match(/^#plant-(\d+)$/);
+  if (hashMatch) {
+    const plant = PLANTS.find((p) => p.id === Number(hashMatch[1]));
+    const card = catalogGrid.querySelector(`.plant-card[data-id="${hashMatch[1]}"]`);
+    if (plant && card) openModal(plant, card);
+  }
+}
+
+loadPlants();

@@ -31,7 +31,7 @@
   </div>
   <nav class="sidebar-nav">
     <a href="catalog.html" class="sidebar-link active">📖 Справочник</a>
-    <a href="index.html#my-plants" class="sidebar-link">🪴 Мои растения</a>
+    <a href="my-plants.html" class="sidebar-link">🪴 Мои растения</a>
     <a href="favorites.html" class="sidebar-link">⭐ Избранное</a>
     <a href="index.html#reminders" class="sidebar-link">🔔 Напоминания</a>
   </nav>
@@ -48,6 +48,9 @@
 
 <div class="modal-overlay" id="modalOverlay"></div>
 <div class="plant-modal" id="plantModal" aria-hidden="true">
+  <button class="modal-copy-link" id="modalCopyLink" aria-label="Скопировать ссылку на карточку">
+    <span class="copy-icon">🔗</span><span class="copy-label">Ссылка</span>
+  </button>
   <button class="modal-close" id="modalClose" aria-label="Закрыть карточку">✕</button>
   <div class="modal-content" id="modalContent"></div>
 </div>

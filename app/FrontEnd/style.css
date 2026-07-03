@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
 :root {
   --green: #2f9e44;
   --green-dark: #1f7a35;
@@ -6,6 +8,7 @@
   --text-muted: #5c665e;
   --border: #dfe7e1;
   --bg: #e3f4e7;
+  --font: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -16,10 +19,11 @@ html, body {
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: var(--font);
   color: var(--text);
   line-height: 1.5;
   background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 .container {
@@ -316,7 +320,9 @@ body {
 
 .hero {
   padding: 72px 0;
-  background: radial-gradient(ellipse 900px 500px at 20% 0%, var(--green-light), transparent 70%);
+  background:
+    radial-gradient(700px 700px at 82% 42%, #c3e7cf, transparent 60%),
+    radial-gradient(1000px 560px at 16% -10%, #cdead7, transparent 64%);
 }
 
 .hero-inner {
