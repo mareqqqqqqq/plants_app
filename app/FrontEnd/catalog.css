@@ -1,0 +1,249 @@
+.catalog-page {
+  padding: 48px 0 80px;
+}
+
+.catalog-title {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+
+.catalog-subtitle {
+  color: var(--text-muted);
+  margin: 0 0 32px;
+  max-width: 640px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.plant-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.plant-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 8px 20px rgba(47, 158, 68, 0.12);
+  transform: translateY(-2px);
+}
+
+.plant-card-image {
+  position: relative;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-light);
+  font-size: 56px;
+}
+
+.plant-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plant-card-name {
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.favorite-star {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: #b4b8b3;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .15s, transform .15s;
+}
+
+.favorite-star:hover {
+  transform: scale(1.1);
+}
+
+.favorite-star.active {
+  color: #f2b705;
+}
+
+.catalog-empty {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.catalog-empty a {
+  color: var(--green-dark);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(27, 31, 28, 0.45);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.plant-modal {
+  display: none;
+  position: fixed;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  overflow: hidden;
+  transition: top .35s ease, left .35s ease, width .35s ease, height .35s ease, border-radius .35s ease;
+}
+
+.plant-modal.open {
+  display: block;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.modal-close:hover {
+  background: var(--green-light);
+}
+
+.modal-content {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.modal-image {
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-light);
+  font-size: 64px;
+  flex-shrink: 0;
+}
+
+.modal-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-body {
+  padding: 16px 24px 20px;
+}
+
+.modal-body h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.toxic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.toxic-badge.danger {
+  background: #fdecec;
+  color: #b3261e;
+}
+
+.toxic-badge.safe {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.modal-section {
+  margin-bottom: 14px;
+}
+
+.modal-section:last-child {
+  margin-bottom: 0;
+}
+
+.modal-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-text {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.text-block .full-text {
+  display: none;
+}
+
+.text-block.expanded .full-text {
+  display: block;
+}
+
+.text-block.expanded .short-text {
+  display: none;
+}
+
+.expand-toggle {
+  background: none;
+  border: none;
+  color: var(--green-dark);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 0;
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.expand-toggle:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .catalog-grid { grid-template-columns: repeat(2, 1fr); }
+}
