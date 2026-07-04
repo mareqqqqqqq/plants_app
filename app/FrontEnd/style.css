@@ -159,6 +159,22 @@ body {
   background: var(--green-light);
 }
 
+.nav-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--green);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .sidebar-link.active {
   border-left-color: var(--green);
   color: var(--green-dark);
@@ -300,16 +316,23 @@ body {
 
 .auth-form input {
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1.5px solid #b7cdba;
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
   color: var(--text);
+  box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.08);
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.auth-form input:hover {
+  border-color: #8ab894;
 }
 
 .auth-form input:focus {
   outline: none;
   border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(47, 158, 68, 0.22);
 }
 
 .auth-form .btn {

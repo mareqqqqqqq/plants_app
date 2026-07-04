@@ -38,7 +38,7 @@
     <a href="catalog.html" class="sidebar-link">📖 Справочник</a>
     <a href="my-plants.html" class="sidebar-link active">🪴 Мои растения</a>
     <a href="favorites.html" class="sidebar-link">⭐ Избранное</a>
-    <a href="index.html#reminders" class="sidebar-link">🔔 Напоминания</a>
+    <a href="reminders.html" class="sidebar-link">🔔 Напоминания <span class="nav-badge" id="reminderBadge" hidden>0</span></a>
   </nav>
 </aside>
 
@@ -57,6 +57,12 @@
       <h2>Нужно войти</h2>
       <p>Личная коллекция растений привязана к аккаунту — войдите или зарегистрируйтесь, чтобы начать.</p>
       <button class="btn btn-primary btn-lg" id="authRequiredBtn">Войти или зарегистрироваться</button>
+    </div>
+
+    <div class="empty-state" id="loadErrorState" hidden>
+      <div class="empty-icon">⚠️</div>
+      <h2>Не удалось загрузить данные</h2>
+      <p>Сервер недоступен. Попробуйте обновить страницу.</p>
     </div>
 
     <div class="empty-state" id="emptyState" hidden>
@@ -195,7 +201,7 @@
 </div>
 
 <script src="auth.js"></script>
-<script src="plants-data.js"></script>
+<script src="notifications.js"></script>
 <script src="my-plants.js"></script>
 <script src="script.js"></script>
 </body>

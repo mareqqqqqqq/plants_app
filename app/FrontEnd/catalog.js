@@ -2,6 +2,8 @@ const TEXT_LIMIT = 150;
 const VIEWPORT_MARGIN = 24;
 const FAVORITES_KEY = 'plantcare_favorites';
 
+let PLANTS = [];
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -120,16 +122,14 @@ let modalState = 'closed';
 let pendingCleanup = null;
 
 let favoritesToRender = null;
-
-function getPlantsToRender() {
-  if (!IS_FAVORITES_PAGE) return PLANTS;
-  if (favoritesToRender) return favoritesToRender;
-  const favIds = getFavoriteIds();
-  return PLANTS.filter((p) => favIds.includes(p.id));
-}
+let loadError = false;
 
 function renderCatalog() {
-  const list = getPlantsToRender();
+  if (loadError) {
+    catalogGrid.innerHTML = `<p class="catalog-empty">Не удалось загрузить данные с сервера. Попробуйте обновить страницу.</p>`;
+    return;
+  }
+  const list = IS_FAVORITES_PAGE ? (favoritesToRender || []) : PLANTS;
   if (IS_FAVORITES_PAGE && list.length === 0) {
     catalogGrid.innerHTML = `<p class="catalog-empty">Пока нет избранных растений. Откройте <a href="catalog.html">справочник</a> и нажмите на звёздочку у понравившихся растений.</p>`;
     return;
@@ -148,9 +148,10 @@ async function loadFavoritePlants() {
     const res = await fetch(`${PLANTS_API}/batch?${params}`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data)) favoritesToRender = data;
+    if (!Array.isArray(data)) throw new Error('invalid response');
+    favoritesToRender = data;
   } catch (err) {
-    console.warn('Не удалось загрузить избранное через /plants/batch, фильтруем локально', err);
+    loadError = true;
   }
 }
 
@@ -341,14 +342,13 @@ async function loadPlants() {
     const res = await fetch(`${PLANTS_API}/explorer`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length) {
-      PLANTS = data;
-    }
+    if (!Array.isArray(data)) throw new Error('invalid response');
+    PLANTS = data;
   } catch (err) {
-    console.warn('Не удалось загрузить растения с сервера, используются моковые данные', err);
+    loadError = true;
   }
 
-  if (IS_FAVORITES_PAGE) {
+  if (!loadError && IS_FAVORITES_PAGE) {
     await loadFavoritePlants();
   }
 

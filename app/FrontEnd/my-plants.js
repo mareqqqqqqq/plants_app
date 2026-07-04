@@ -1,5 +1,7 @@
 const PLANTS_API = '/plants';
 
+let PLANTS = [];
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -12,6 +14,7 @@ function safeUrl(url) {
 
 const myPlantsGrid = document.getElementById('myPlantsGrid');
 const emptyState = document.getElementById('emptyState');
+const loadErrorState = document.getElementById('loadErrorState');
 const authRequired = document.getElementById('authRequired');
 const authRequiredBtn = document.getElementById('authRequiredBtn');
 const addPlantBtn = document.getElementById('addPlantBtn');
@@ -95,9 +98,10 @@ function cardHtml(rec) {
 
 function setState(state) {
   authRequired.hidden = state !== 'auth-required';
+  loadErrorState.hidden = state !== 'error';
   emptyState.hidden = state !== 'empty';
   myPlantsGrid.hidden = state !== 'list';
-  addPlantBtn.hidden = state === 'auth-required';
+  addPlantBtn.hidden = state === 'auth-required' || state === 'error';
 }
 
 async function fetchMyPlants() {
@@ -115,9 +119,12 @@ async function renderMyPlants() {
   try {
     myPlantsCache = await fetchMyPlants();
   } catch (err) {
-    console.warn('Не удалось загрузить растения пользователя', err);
-    myPlantsCache = [];
+    myPlantsGrid.innerHTML = '';
+    setState('error');
+    return;
   }
+
+  updateReminderBadge(computeNotifications(myPlantsCache).length);
 
   if (!myPlantsCache.length) {
     myPlantsGrid.innerHTML = '';
@@ -460,9 +467,9 @@ async function loadCatalogForForm() {
     const res = await fetch(`${PLANTS_API}/explorer`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length) PLANTS = data;
+    if (Array.isArray(data)) PLANTS = data;
   } catch (err) {
-    console.warn('Не удалось загрузить справочник растений, используются моковые данные', err);
+    PLANTS = [];
   }
   catalogOptions.innerHTML = '';
   PLANTS.forEach((p) => {

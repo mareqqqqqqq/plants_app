@@ -3,8 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PlantCare — помощник по уходу за растениями</title>
+<title>Напоминания — PlantCare</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="catalog.css">
+<link rel="stylesheet" href="my-plants.css">
+<link rel="stylesheet" href="reminders.css">
 </head>
 <body>
 
@@ -12,7 +15,7 @@
   <div class="container header-inner">
     <button class="burger" id="burgerBtn" aria-label="Открыть меню" aria-expanded="false">☰</button>
 
-    <a href="#" class="logo">🌿 PlantCare</a>
+    <a href="index.html" class="logo">🌿 PlantCare</a>
 
     <div class="auth-actions">
       <button class="btn btn-ghost" id="loginBtn">Войти</button>
@@ -36,59 +39,37 @@
     <a href="catalog.html" class="sidebar-link">📖 Справочник</a>
     <a href="my-plants.html" class="sidebar-link">🪴 Мои растения</a>
     <a href="favorites.html" class="sidebar-link">⭐ Избранное</a>
-    <a href="reminders.html" class="sidebar-link">🔔 Напоминания <span class="nav-badge" id="reminderBadge" hidden>0</span></a>
+    <a href="reminders.html" class="sidebar-link active">🔔 Напоминания <span class="nav-badge" id="reminderBadge" hidden>0</span></a>
   </nav>
 </aside>
 
-<section class="hero">
-  <div class="container hero-inner">
-    <div class="hero-text">
-      <h1>Ухаживайте за растениями без стресса и забытых поливов</h1>
-      <p>Справочник растений с рекомендациями по уходу, личная коллекция и напоминания о поливе и пересадке — всё в одном приложении.</p>
-    </div>
-    <div class="hero-image">
-      <div class="hero-placeholder">🌱🪴🌵</div>
-    </div>
-  </div>
-</section>
-
-<section class="features" id="catalog">
+<main class="catalog-page">
   <div class="container">
-    <h2>Что умеет PlantCare</h2>
-    <div class="features-grid">
-      <a href="catalog.html" class="feature-card">
-        <div class="feature-icon">📖</div>
-        <h3>Справочник растений</h3>
-        <p>Карточки с описанием полива, освещения, пересадки, ядовитости и особенностей ухода.</p>
-      </a>
-      <a href="my-plants.html" class="feature-card" id="my-plants">
-        <div class="feature-icon">🪴</div>
-        <h3>Личный список растений</h3>
-        <p>Добавляйте свои растения, указывайте дату посадки, заметки и параметры напоминаний.</p>
-      </a>
-      <a href="favorites.html" class="feature-card" id="favorites">
-        <div class="feature-icon">⭐</div>
-        <h3>Избранное</h3>
-        <p>Сохраняйте понравившиеся растения из справочника, чтобы быстро вернуться к ним позже.</p>
-      </a>
-      <a href="reminders.html" class="feature-card" id="reminders">
-        <div class="feature-icon">🔔</div>
-        <h3>Напоминания</h3>
-        <p>Уведомления о поливе и пересадке для растений из вашей коллекции — ничего не забудете.</p>
-      </a>
-    </div>
-  </div>
-</section>
+    <h1 class="catalog-title">Напоминания</h1>
+    <p class="catalog-subtitle">Уведомления о поливе и пересадке растений из вашей коллекции.</p>
 
-<footer class="site-footer">
-  <div class="container footer-inner">
-    <span>© 2026 PlantCare</span>
-    <div class="footer-links">
-      <a href="#">О проекте</a>
-      <a href="#">Контакты</a>
+    <div class="empty-state" id="authRequired" hidden>
+      <div class="empty-icon">🔐</div>
+      <h2>Нужно войти</h2>
+      <p>Напоминания привязаны к аккаунту — войдите или зарегистрируйтесь.</p>
+      <button class="btn btn-primary btn-lg" id="authRequiredBtn">Войти или зарегистрироваться</button>
     </div>
+
+    <div class="empty-state" id="loadErrorState" hidden>
+      <div class="empty-icon">⚠️</div>
+      <h2>Не удалось загрузить данные</h2>
+      <p>Сервер недоступен. Попробуйте обновить страницу.</p>
+    </div>
+
+    <div class="empty-state" id="emptyState" hidden>
+      <div class="empty-icon">✅</div>
+      <h2>Всё под контролем</h2>
+      <p>Сейчас нет растений, которые пора полить или пересадить.</p>
+    </div>
+
+    <div class="notif-list" id="notifList" hidden></div>
   </div>
-</footer>
+</main>
 
 <div class="auth-overlay" id="authOverlay"></div>
 
@@ -129,6 +110,7 @@
 
 <script src="auth.js"></script>
 <script src="notifications.js"></script>
+<script src="reminders.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
